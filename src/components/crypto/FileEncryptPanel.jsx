@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload, Download, Copy, Check, AlertCircle, Loader2 } from "lucide-react";
+import { Upload, Download, Copy, Check, AlertCircle, Loader2, FileUp } from "lucide-react";
 import { toast } from "sonner";
 import {
   encryptFile,
@@ -23,9 +23,9 @@ export default function FileEncryptPanel({ selectedKey }) {
   const [result, setResult] = useState(null);
   const [resultFile, setResultFile] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
 
-  const handleEncryptFile = async (e) => {
-    const file = e.target.files?.[0];
+  const handleEncryptFile = async (file) => {
     if (!file || !selectedKey) {
       toast.error("Please select both a file and a key");
       return;
@@ -47,8 +47,7 @@ export default function FileEncryptPanel({ selectedKey }) {
     }
   };
 
-  const handleDecryptFile = async (e) => {
-    const file = e.target.files?.[0];
+  const handleDecryptFile = async (file) => {
     if (!file || !selectedKey) {
       toast.error("Please select both a file and a key");
       return;
@@ -80,8 +79,7 @@ export default function FileEncryptPanel({ selectedKey }) {
     }
   };
 
-  const handleSignFile = async (e) => {
-    const file = e.target.files?.[0];
+  const handleSignFile = async (file) => {
     if (!file || !selectedKey) {
       toast.error("Please select both a file and a key");
       return;
@@ -103,8 +101,7 @@ export default function FileEncryptPanel({ selectedKey }) {
     }
   };
 
-  const handleVerifyFile = async (e) => {
-    const file = e.target.files?.[0];
+  const handleVerifyFile = async (file) => {
     if (!file || !selectedKey) {
       toast.error("Please select both a file and a key");
       return;
@@ -142,6 +139,53 @@ export default function FileEncryptPanel({ selectedKey }) {
       toast.error(error.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFileInput = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processFile(file);
+    }
+  };
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    const files = e.dataTransfer.files;
+    if (files && files[0]) {
+      processFile(files[0]);
+    }
+  };
+
+  const processFile = (file) => {
+    switch (mode) {
+      case "encrypt":
+        handleEncryptFile(file);
+        break;
+      case "decrypt":
+        handleDecryptFile(file);
+        break;
+      case "sign":
+        handleSignFile(file);
+        break;
+      case "verify":
+        handleVerifyFile(file);
+        break;
+      default:
+        break;
     }
   };
 
@@ -207,14 +251,37 @@ export default function FileEncryptPanel({ selectedKey }) {
 
           {/* ENCRYPT */}
           <TabsContent value="encrypt" className="space-y-4">
-            <div className="border-2 border-dashed rounded-lg p-6">
+            <div
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+              className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition ${
+                dragActive
+                  ? "border-primary bg-primary/5"
+                  : "border-muted-foreground/25 hover:border-muted-foreground/50"
+              }`}
+            >
+              <FileUp className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
+              <p className="text-sm font-medium mb-1">Drag and drop your file here</p>
+              <p className="text-xs text-muted-foreground mb-3">or click to select</p>
               <Input
                 type="file"
-                onChange={handleEncryptFile}
+                onChange={handleFileInput}
                 disabled={loading}
                 className="cursor-pointer"
                 accept="*/*"
+                style={{ display: "none" }}
+                id="encrypt-input"
               />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => document.getElementById("encrypt-input")?.click()}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Select File
+              </Button>
             </div>
             
             {result?.type === "encrypted" && (
@@ -262,14 +329,36 @@ export default function FileEncryptPanel({ selectedKey }) {
 
           {/* DECRYPT */}
           <TabsContent value="decrypt" className="space-y-4">
-            <div className="border-2 border-dashed rounded-lg p-6">
+            <div
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+              className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition ${
+                dragActive
+                  ? "border-primary bg-primary/5"
+                  : "border-muted-foreground/25 hover:border-muted-foreground/50"
+              }`}
+            >
+              <FileUp className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
+              <p className="text-sm font-medium mb-1">Drag and drop encrypted file here</p>
+              <p className="text-xs text-muted-foreground mb-3">or click to select</p>
               <Input
                 type="file"
-                onChange={handleDecryptFile}
+                onChange={handleFileInput}
                 disabled={loading}
                 className="cursor-pointer"
-                accept=".encrypted,application/json"
+                style={{ display: "none" }}
+                id="decrypt-input"
               />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => document.getElementById("decrypt-input")?.click()}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Select File
+              </Button>
             </div>
             
             {result?.type === "decrypted" && (
@@ -303,14 +392,37 @@ export default function FileEncryptPanel({ selectedKey }) {
 
           {/* SIGN */}
           <TabsContent value="sign" className="space-y-4">
-            <div className="border-2 border-dashed rounded-lg p-6">
+            <div
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+              className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition ${
+                dragActive
+                  ? "border-primary bg-primary/5"
+                  : "border-muted-foreground/25 hover:border-muted-foreground/50"
+              }`}
+            >
+              <FileUp className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
+              <p className="text-sm font-medium mb-1">Drag and drop your file here</p>
+              <p className="text-xs text-muted-foreground mb-3">or click to select</p>
               <Input
                 type="file"
-                onChange={handleSignFile}
+                onChange={handleFileInput}
                 disabled={loading}
                 className="cursor-pointer"
                 accept="*/*"
+                style={{ display: "none" }}
+                id="sign-input"
               />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => document.getElementById("sign-input")?.click()}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Select File
+              </Button>
             </div>
             
             {result?.type === "signed" && (
@@ -358,14 +470,36 @@ export default function FileEncryptPanel({ selectedKey }) {
 
           {/* VERIFY */}
           <TabsContent value="verify" className="space-y-4">
-            <div className="border-2 border-dashed rounded-lg p-6">
+            <div
+              onDragEnter={handleDrag}
+              onDragLeave={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+              className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition ${
+                dragActive
+                  ? "border-primary bg-primary/5"
+                  : "border-muted-foreground/25 hover:border-muted-foreground/50"
+              }`}
+            >
+              <FileUp className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
+              <p className="text-sm font-medium mb-1">Drag and drop signed file here</p>
+              <p className="text-xs text-muted-foreground mb-3">or click to select</p>
               <Input
                 type="file"
-                onChange={handleVerifyFile}
+                onChange={handleFileInput}
                 disabled={loading}
                 className="cursor-pointer"
-                accept=".signed,application/json"
+                style={{ display: "none" }}
+                id="verify-input"
               />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => document.getElementById("verify-input")?.click()}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Select File
+              </Button>
             </div>
             
             {result?.type === "verified" && (
