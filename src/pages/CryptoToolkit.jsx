@@ -9,6 +9,7 @@ import SignPanel from "@/components/crypto/SignPanel";
 import VerifyPanel from "@/components/crypto/VerifyPanel";
 import EncryptPanel from "@/components/crypto/EncryptPanel";
 import DecryptPanel from "@/components/crypto/DecryptPanel";
+import FileEncryptPanel from "@/components/crypto/FileEncryptPanel";
 import { toast } from "sonner";
 
 export default function CryptoToolkit() {
@@ -105,6 +106,7 @@ export default function CryptoToolkit() {
                 <TabsTrigger value="verify" className="flex-1 sm:flex-none">Verify</TabsTrigger>
                 <TabsTrigger value="encrypt" className="flex-1 sm:flex-none">Encrypt</TabsTrigger>
                 <TabsTrigger value="decrypt" className="flex-1 sm:flex-none">Decrypt</TabsTrigger>
+                <TabsTrigger value="file" className="flex-1 sm:flex-none">File</TabsTrigger>
               </TabsList>
               <TabsContent value="sign">
                 <SignPanel selectedKey={selectedKey} />
@@ -117,6 +119,9 @@ export default function CryptoToolkit() {
               </TabsContent>
               <TabsContent value="decrypt">
                 <DecryptPanel selectedKey={selectedKey} />
+              </TabsContent>
+              <TabsContent value="file">
+                <FileEncryptPanel selectedKey={selectedKey} />
               </TabsContent>
             </Tabs>
           </div>
